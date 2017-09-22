@@ -32,4 +32,5 @@
 *.app
 
 workspace/
+.DS_Store
 
