@@ -4,7 +4,7 @@
 #include <string>
 #include <math.h>
 #include <map>
-#define MAX_STRING 100
+#define MAX_STRING 100000
 using namespace std;
 
 const int hash_table_size = 30000000;
@@ -225,11 +225,13 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         return 0;
     }
+
     if ((i = ArgPos((char *)"-text", argc, argv)) > 0) strcpy(text_file, argv[i + 1]);
     if ((i = ArgPos((char *)"-output-ww", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
     if ((i = ArgPos((char *)"-output-words", argc, argv)) > 0) strcpy(output_words, argv[i + 1]);
     if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
     if ((i = ArgPos((char *)"-min-count", argc, argv)) > 0) min_count = atoi(argv[i + 1]);
+
     Process();
     return 0;
 }
