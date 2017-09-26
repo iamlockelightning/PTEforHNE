@@ -7,7 +7,8 @@
 #include <gsl/gsl_rng.h>
 #include "linelib.h"
 
-char nodes_file[MAX_STRING], words_file[MAX_STRING], hin_file[MAX_STRING], output_file[MAX_STRING];
+char nodes_file[MAX_STRING], words_file[MAX_STRING], en_hin_file[MAX_STRING], output_file[MAX_STRING],
+		zh_hin_file[MAX_STRING], cl_hin_file[MAX_STRING];
 int binary = 0, num_threads = 1, vector_size = 100, negative = 5;
 long long samples = 1, edge_count_actual;
 real alpha = 0.025, starting_alpha;
@@ -16,8 +17,11 @@ const gsl_rng_type * gsl_T;
 gsl_rng * gsl_r;
 
 line_node nodes, words;
-line_hin text_hin;
-line_trainer trainer_lw, trainer_dw, trainer_ww;
+line_hin en_text_hin, zh_text_hin, cl_hin;
+// line_trainer trainer_lw, trainer_dw, trainer_ww;
+// Modified:
+line_trainer trainer_w_en, trainer_w_zh, trainer_c;
+int NETWORK_NUM = 3;
 
 double func_rand_num()
 {
@@ -29,6 +33,7 @@ void *TrainModelThread(void *id)
 	long long edge_count = 0, last_edge_count = 0;
 	unsigned long long next_random = (long long)id;
 	real *error_vec = (real *)calloc(vector_size, sizeof(real));
+	real res = 0;
 
 	while (1)
 	{
@@ -39,16 +44,33 @@ void *TrainModelThread(void *id)
 			edge_count_actual += edge_count - last_edge_count;
 			last_edge_count = edge_count;
 			printf("%cAlpha: %f Progress: %.3lf%%", 13, alpha, (real)edge_count_actual / (real)(samples + 1) * 100);
+			printf("%cRes: %f", 13, res);
 			fflush(stdout);
 			alpha = starting_alpha * (1 - edge_count_actual / (real)(samples + 1));
 			if (alpha < starting_alpha * 0.0001) alpha = starting_alpha * 0.0001;
 		}
 
-		trainer_ww.train_sample(alpha, error_vec, func_rand_num, next_random);
-		trainer_dw.train_sample(alpha, error_vec, func_rand_num, next_random);
-		trainer_lw.train_sample(alpha, error_vec, func_rand_num, next_random);
+		// Modified
+		for (int i=0; i!=NETWORK_NUM; i+=1) {
+			if (LOG_INFO) {
+				printf("Edge Sampled from Network[%d]_____\n", i);
+			}
+			switch(i) {
+				case 0:
+					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random);
+					break;
+				case 1:
+					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random);
+					break;
+				case 2:
+					trainer_c.train_transE_sample(alpha, error_vec, func_rand_num, next_random, res);
+					break;
+				default:
+					break;
+			}
+		}
 
-		edge_count += 3;
+		edge_count += NETWORK_NUM;
 	}
 	free(error_vec);
 	pthread_exit(NULL);
@@ -61,11 +83,16 @@ void TrainModel() {
 
 	nodes.init(nodes_file, vector_size);
 	words.init(words_file, vector_size);
-	text_hin.init(hin_file, &nodes, &words);
+	en_text_hin.init(en_hin_file, &nodes, &words);
+	zh_text_hin.init(zh_hin_file, &nodes, &words);
+	cl_hin.init(cl_hin_file, &nodes, &words);
 
-	trainer_ww.init('w', &text_hin, negative);
-	trainer_dw.init('d', &text_hin, negative);
-	trainer_lw.init('l', &text_hin, negative);
+	// trainer_ww.init('w', &text_hin, negative);
+	// trainer_dw.init('d', &text_hin, negative);
+	// trainer_lw.init('l', &text_hin, negative);
+	trainer_w_en.init('w', &en_text_hin, negative);
+	trainer_w_zh.init('w', &zh_text_hin, negative);
+	trainer_c.init('c', &cl_hin, negative);
 
 	clock_t start = clock();
 	printf("Training process:\n");
@@ -123,7 +150,11 @@ int main(int argc, char **argv) {
 	output_file[0] = 0;
 	if ((i = ArgPos((char *)"-nodes", argc, argv)) > 0) strcpy(nodes_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-words", argc, argv)) > 0) strcpy(words_file, argv[i + 1]);
-	if ((i = ArgPos((char *)"-hin", argc, argv)) > 0) strcpy(hin_file, argv[i + 1]);
+
+	if ((i = ArgPos((char *)"-enhin", argc, argv)) > 0) strcpy(en_hin_file, argv[i + 1]);
+	if ((i = ArgPos((char *)"-zhhin", argc, argv)) > 0) strcpy(zh_hin_file, argv[i + 1]);
+	if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
+
 	if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-binary", argc, argv)) > 0) binary = atoi(argv[i + 1]);
 	if ((i = ArgPos((char *)"-size", argc, argv)) > 0) vector_size = atoi(argv[i + 1]);
