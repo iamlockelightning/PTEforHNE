@@ -9,6 +9,8 @@
 #include <iostream>
 
 #define LOG_INFO 1 // Added
+#define SHOW_FIXED 1 // Added
+
 #define MAX_STRING 500
 #define EXP_TABLE_SIZE 1000
 #define MAX_EXP 6

@@ -419,22 +419,31 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 			if (target == v) continue;
 			label = 0;
 		}
-		if (LOG_INFO) {
-			printf("node_u->vec.row(u) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(v) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(target) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
+
+		if (LOG_INFO && d==neg_samples) {
+			printf("__ in pte...\n");
+			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
+
 		f = node_u->vec.row(u) * node_v->vec.row(target).transpose();
 		if (f > MAX_EXP) g = (label - 1) * alpha;
 		else if (f < -MAX_EXP) g = (label - 0) * alpha;
 		else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
 		error_vec += g * ((node_v->vec.row(target)));
 		node_v->vec.row(target) += g * ((node_u->vec.row(u)));
-		if (LOG_INFO) {
-			printf("node_u->vec.row(u) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(v) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(target) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
+		if (LOG_INFO && d==neg_samples) {
+			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
+	}
+	if (SHOW_FIXED) {
+		u = v = 0;
+		printf("+++ show FIXED...\n");
+		printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+		printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 	}
 	node_u->vec.row(u) += error_vec;
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
@@ -456,13 +465,18 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 	Eigen::Map<BLPVector> error_vec(_error_vec, vector_size);
 	error_vec.setZero();
 
-	for (int d = 0; d < neg_samples + 1; d++)
-	{
-		target = neg_table[(rand_index >> 16) % neg_table_size];
+	// for (int d = 0; d < neg_samples + 1; d++)
+	// {
+		do {
+			rand_index = rand_index * (unsigned long long)25214903917 + 11;
+			target = neg_table[(rand_index >> 16) % neg_table_size];
+		} while (target == v);
+
 		if (LOG_INFO) {
-			printf("node_u->vec.row(u) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(v) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(target) before updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
+			printf("__ in transE...\n");
+			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
 		real sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).cwiseAbs().sum(); // L1norm
 		// (node_u->vec.row(u) - node_v->vec.row(target)).norm() // L2norm
@@ -481,11 +495,17 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 			node_u->vec.row(u) += alpha * x;
 			node_v->vec.row(target) -= alpha * x;
 			if (LOG_INFO) {
-				printf("node_u->vec.row(u) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-				printf("node_v->vec.row(v) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-				printf("node_v->vec.row(target) after updated: [%lf, %lf, %lf, %lf, %lf].\n", node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
+				printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 			}
 	    }
-	}
+	    if (SHOW_FIXED) {
+			u = v = 0;
+			printf("+++ show FIXED...\n");
+			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		}
+	// }
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
