@@ -22,7 +22,7 @@ line_hin en_text_hin, zh_text_hin, cl_hin;
 // line_trainer trainer_lw, trainer_dw, trainer_ww;
 // Modified:
 line_trainer trainer_w_en, trainer_w_zh, trainer_c;
-int NETWORK_NUM = 3;
+int NETWORK_NUM = 2;
 
 double func_rand_num()
 {

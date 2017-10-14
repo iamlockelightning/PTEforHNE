@@ -1,20 +1,20 @@
 #!/bin/sh
 
-text_file=../WikiExtractor/etc/en_text_all.txt # the text file for training
+# text_file=../WikiExtractor/etc/en_text_all.txt # the text file for training
 # text_file=a.txt # the text file for training
 # lang=en
 output_path=workspace/
 
-window=5 # the window size for the construction of the word-word network
-min_count=5 # discard words that appear less than <min_count>
+# window=5 # the window size for the construction of the word-word network
+# min_count=5 # discard words that appear less than <min_count>
 
 # heterogeneous text network construction
 # ./text2hin/data2w -text ${text_file} -output-ww ${output_path}${lang}.ww.net -output-words ${output_path}${lang}.words.node -window ${window} -min-count ${min_count}
 
-cat ${output_path}en.words.node ${output_path}zh.words.node > ${output_path}all.words.node
+# cat ${output_path}en.words.node ${output_path}zh.words.node > ${output_path}all.words.node
 
 # learn predictive word representations
-./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 1 -size 30 -negative 5 -samples 1000 -threads 32
+./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 0 -size 30 -negative 5 -samples 10000 -threads 32
 
 # infer the embeddings of the texts provided in the <infer_file>
 # ./text2vec/infer -infer ${infer_file} -vector ${output_path}word.emb -output ${output_path}text.emb -debug 2 -binary 0

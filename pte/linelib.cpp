@@ -420,7 +420,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 			label = 0;
 		}
 
-		if (LOG_INFO && d==neg_samples) {
+		if (LOG_INFO && d==0) {
 			printf("__ in pte...\n");
 			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
@@ -433,19 +433,19 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 		else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
 		error_vec += g * ((node_v->vec.row(target)));
 		node_v->vec.row(target) += g * ((node_u->vec.row(u)));
-		if (LOG_INFO && d==neg_samples) {
+	}
+	node_u->vec.row(u) += error_vec;
+	if (LOG_INFO) {
 			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
-	}
 	if (SHOW_FIXED) {
 		u = v = 0;
 		printf("+++ show FIXED...\n");
 		printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 		printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 	}
-	node_u->vec.row(u) += error_vec;
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 // Added
