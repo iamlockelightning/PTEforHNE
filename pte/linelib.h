@@ -8,10 +8,10 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 
-#define LOG_INFO 1 // Added
-#define SHOW_FIXED 1 // Added
+#define LOG_INFO 0 // Added
+#define SHOW_FIXED 0 // Added
 
-#define MAX_STRING 500
+#define MAX_STRING 100000 //500
 #define EXP_TABLE_SIZE 1000
 #define MAX_EXP 6
 const int neg_table_size = 1e8;
