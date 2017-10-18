@@ -45,7 +45,6 @@ void *TrainModelThread(void *id)
 			edge_count_actual += edge_count - last_edge_count;
 			last_edge_count = edge_count;
 			printf("%cAlpha: %f Progress: %.3lf%%", 13, alpha, (real)edge_count_actual / (real)(samples + 1) * 100);
-			printf("%cRes: %f", 13, res);
 			fflush(stdout);
 			alpha = starting_alpha * (1 - edge_count_actual / (real)(samples + 1));
 			if (alpha < starting_alpha * 0.0001) alpha = starting_alpha * 0.0001;
@@ -64,7 +63,7 @@ void *TrainModelThread(void *id)
 					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random);
 					break;
 				case 2:
-					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res);
+					// trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res);
 					break;
 				default:
 					break;
@@ -86,14 +85,14 @@ void TrainModel() {
 	words.init(words_file, vector_size);
 	en_text_hin.init(en_hin_file, &nodes, &words);
 	zh_text_hin.init(zh_hin_file, &nodes, &words);
-	cl_hin.init(cl_hin_file, &nodes, &words);
+	// cl_hin.init(cl_hin_file, &nodes, &words);
 
 	// trainer_ww.init('w', &text_hin, negative);
 	// trainer_dw.init('d', &text_hin, negative);
 	// trainer_lw.init('l', &text_hin, negative);
 	trainer_w_en.init('w', &en_text_hin, negative);
 	trainer_w_zh.init('w', &zh_text_hin, negative);
-	trainer_c.init('c', &cl_hin, negative);
+	// trainer_c.init('c', &cl_hin, negative);
 
 	clock_t start = clock();
 	printf("Training process:\n");
@@ -154,7 +153,7 @@ int main(int argc, char **argv) {
 
 	if ((i = ArgPos((char *)"-enhin", argc, argv)) > 0) strcpy(en_hin_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-zhhin", argc, argv)) > 0) strcpy(zh_hin_file, argv[i + 1]);
-	if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
+	// if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
 
 	if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-binary", argc, argv)) > 0) binary = atoi(argv[i + 1]);
