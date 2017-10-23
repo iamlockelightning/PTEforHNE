@@ -4,7 +4,7 @@
 #include <math.h>
 #include <vector>
 
-#define MAX_STRING 100
+#define MAX_STRING 100000
 
 const int hash_table_size = 30000000;
 
@@ -19,7 +19,7 @@ char infer_file[MAX_STRING], vector_file[MAX_STRING], output_file[MAX_STRING];
 struct ClassVertex *vertex;
 int binary = 0;
 int *vertex_hash_table;
-int max_num_vertices = 1000, num_vertices = 0, doc_size = 0;
+int max_num_vertices = 100000, num_vertices = 0, doc_size = 0;
 int vector_size;
 real *vec;
 clock_t start;
@@ -73,7 +73,7 @@ int AddVertex(char *name)
     num_vertices++;
     if (num_vertices + 2 >= max_num_vertices)
     {
-        max_num_vertices += 1000;
+        max_num_vertices += 100000;
         vertex = (struct ClassVertex *)realloc(vertex, max_num_vertices * sizeof(struct ClassVertex));
     }
     InsertHashTable(name, num_vertices - 1);
@@ -95,17 +95,24 @@ void BuildVocab()
     
     vec = (real *)malloc(size * vector_size * sizeof(real));
     
+    
     for (long long k = 0; k != size; k++)
     {
-        fscanf(fi, "%s", word);
-        ch = fgetc(fi);
-        ch++;
+        if (k % 10000 == 0) {
+            printf("__%lld\n", k);
+        }
+        fscanf(fi, "%s ", word);
+        //if (word[2]=='z') {
+        //ch = fgetc(fi);
+        //ch++;
         AddVertex(word);
         for (int c = 0; c != vector_size; c++)
         {
-            fread(&f_num, sizeof(real), 1, fi);
+            //fread(&f_num, sizeof(real), 1, fi);
+            fscanf(fi, "%f ", &f_num);
             vec[c + k * vector_size] = (real)f_num;
         }
+        //}
     }
     fclose(fi);
     
@@ -172,9 +179,12 @@ void ReadData()
 
 void Process()
 {
+    printf("start BuildVocab()\n");
     BuildVocab();
+    printf("start ReadData()\n");
     ReadData();
     
+    printf("start gen...\n");
     FILE *fo;
     real *emb = (real *)calloc(vector_size, sizeof(real));
     fo = fopen(output_file, "wb");
