@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -8,7 +9,7 @@ using namespace std;
 #define MAX_STRING 100000
 
 char title_file[MAX_STRING], vector_file[MAX_STRING], output_file[MAX_STRING];
-vector<string> titles;
+vector<string> title;
 
 void Process () {
 	ifstream if_1(title_file);
@@ -16,10 +17,22 @@ void Process () {
 	ofstream of(output_file);
 	string line;
 	while(getline(if_1, line)) {
-		cout << line;
-
+		title.push_back(line);
 	}
 	if_1.close();
+	cout << "title.size(): " << title.size() << endl;
+	vector<string>::iterator it = title.begin();
+	while(getline(if_2, line)) {
+		if (it == title.begin()) {
+			of << line << '\n';
+		} else { 
+			of << (*it) << line.substr(line.find(' ')) << '\n';
+		}
+		it += 1;
+	}
+	if ((*it) == "") {
+		cout << "matched~" << endl;
+	}
 	if_2.close();
 	of.close();
 }
@@ -35,7 +48,7 @@ int ArgPos(char *str, int argc, char **argv) {
 	}
 	return -1;
 }
-// ./combine -title ../WikiExtractor/etc/zh_title_40000_all.txt -vector ./workspace/zh.word.emb -output ./workspace/zh.title.text.emb
+
 int main (int argc, char **argv) {
 	int i;
     if (argc == 1) {

@@ -12,6 +12,7 @@ const int hash_table_size = 30000000;
 struct ClassVertex {
     double degree;
     char *name;
+    long long freq_cnt; // added
 };
 
 struct bigram
@@ -33,7 +34,8 @@ char text_file[MAX_STRING], output_file[MAX_STRING], output_words[MAX_STRING];
 
 struct ClassVertex *vertex;
 int *vertex_hash_table;
-int max_num_vertices = 1000, num_vertices = 0;
+int max_num_vertices = 100000, num_vertices = 0;
+
 
 unsigned int Hash(char *key)
 {
@@ -65,7 +67,10 @@ int SearchHashTable(char *key)
     while (1)
     {
         if (vertex_hash_table[addr] == -1) return -1;
-        if (!strcmp(key, vertex[vertex_hash_table[addr]].name)) return vertex_hash_table[addr];
+        if (!strcmp(key, vertex[vertex_hash_table[addr]].name)) {
+            vertex[num_vertices].freq_cnt += 1;
+            return vertex_hash_table[addr];
+        }
         addr = (addr + 1) % hash_table_size;
     }
     return -1;
@@ -79,10 +84,11 @@ int AddVertex(char *name)
     vertex[num_vertices].name = (char *)calloc(length, sizeof(char));
     strcpy(vertex[num_vertices].name, name);
     vertex[num_vertices].degree = 0;
+    vertex[num_vertices].freq_cnt = 1;
     num_vertices++;
     if (num_vertices + 2 >= max_num_vertices)
     {
-        max_num_vertices += 1000;
+        max_num_vertices += 100000;
         vertex = (struct ClassVertex *)realloc(vertex, max_num_vertices * sizeof(struct ClassVertex));
     }
     InsertHashTable(name, num_vertices - 1);
@@ -92,8 +98,6 @@ int AddVertex(char *name)
 void BuildVocab()
 {
     vertex = (struct ClassVertex *)calloc(max_num_vertices, sizeof(struct ClassVertex));
-    vertex_hash_table = (int *)malloc(hash_table_size * sizeof(int));
-    for (int k = 0; k != hash_table_size; k++) vertex_hash_table[k] = -1;
     
     char word[MAX_STRING];
     FILE *fin;
@@ -110,8 +114,8 @@ void BuildVocab()
         }
         if (SearchHashTable(word) == -1) AddVertex(word);
     }
-    printf("Number of tokens: %lld\n", totaltoken);
-    printf("Number of words: %d\n", num_vertices);
+    printf("Total number of tokens: %lld\n", totaltoken);
+    printf("Total number of words: %d\n", num_vertices);
     fclose(fin);
 }
 
@@ -140,6 +144,7 @@ void ReadWord(char *word, FILE *fin) {
 
 void Process()
 {
+    InitHashTable();
     BuildVocab();
     
     FILE *fi = fopen(text_file, "rb");
@@ -185,7 +190,7 @@ void Process()
     
     FILE *fo = fopen(output_file, "wb");
     long long bgmsize = bgm2cnt.size();
-    printf("Number of edges: %lld\n", bgmsize);
+    printf("Total number of edges: %lld\n", bgmsize);
     long long written = 0;
     map<bigram, long long>::iterator iter = bgm2cnt.begin();
     while (iter != bgm2cnt.end())
@@ -195,17 +200,26 @@ void Process()
             printf("%cWrite file: %.3lf%%", 13, double(written) / bgmsize * 100);
             fflush(stdout);
         }
-        fprintf(fo,"%s\t%s\t%lld\tw\n", vertex[(iter->first).u].name, vertex[(iter->first).v].name, (iter->second));
-        
-        written++;
+        if (vertex[(iter->first).u].freq_cnt > min_count && vertex[(iter->first).v].freq_cnt > min_count) {
+            fprintf(fo,"%s\t%s\t%lld\tw\n", vertex[(iter->first).u].name, vertex[(iter->first).v].name, (iter->second));
+            written++;
+        }
         iter++;
     }
     printf("\n");
+    printf("Number of edges after min_count: %lld\n", written);
     fclose(fo);
     
     fo = fopen(output_words, "w");
-    for (int k = 0; k != num_vertices; k++) fprintf(fo, "%s\n", vertex[k].name);
+    written = 0;
+    for (int k = 0; k != num_vertices; k++) {
+        if (vertex[k].freq_cnt > min_count) {
+            fprintf(fo, "%s\n", vertex[k].name);
+            written += 1;
+        }
+    }
     fclose(fo);
+    printf("Number of words after min_count: %lld\n", written);
 }
 
 int ArgPos(char *str, int argc, char **argv) {
