@@ -142,6 +142,12 @@ void ReadWord(char *word, FILE *fin) {
     word[a] = 0;
 }
 
+int WordType(char *word) {
+    if (word[0] == 'e' && word[1] == '_') return 2;
+    if (word[0] == 'w' && word[1] == '_') return 1;
+    return 0;
+}
+
 void Process()
 {
     InitHashTable();
@@ -200,7 +206,7 @@ void Process()
             printf("%cWrite file: %.3lf%%", 13, double(written) / bgmsize * 100);
             fflush(stdout);
         }
-        if (vertex[(iter->first).u].freq_cnt > min_count && vertex[(iter->first).v].freq_cnt > min_count) {
+        if ((WordType(vertex[(iter->first).u].name)==2 || WordType(vertex[(iter->first).v].name)==2) || (vertex[(iter->first).u].freq_cnt > min_count && vertex[(iter->first).v].freq_cnt > min_count)) {
             fprintf(fo,"%s\t%s\t%lld\tw\n", vertex[(iter->first).u].name, vertex[(iter->first).v].name, (iter->second));
             written++;
         }
@@ -213,7 +219,7 @@ void Process()
     fo = fopen(output_words, "w");
     written = 0;
     for (int k = 0; k != num_vertices; k++) {
-        if (vertex[k].freq_cnt > min_count) {
+        if (WordType(vertex[k].name)==2 || vertex[k].freq_cnt>min_count) {
             fprintf(fo, "%s\n", vertex[k].name);
             written += 1;
         }

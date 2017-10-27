@@ -12,7 +12,7 @@ char nodes_file[MAX_STRING], words_file[MAX_STRING], en_hin_file[MAX_STRING], ou
 int binary = 0, num_threads = 1, vector_size = 100, negative = 5;
 long long samples = 1, edge_count_actual;
 real alpha = 0.025, starting_alpha;
-real learning_rate = 0.01;
+real learning_rate = 0.01, lambda = 1.0;
 // 0.01
 const gsl_rng_type * gsl_T;
 gsl_rng * gsl_r;
@@ -22,7 +22,7 @@ line_hin en_text_hin, zh_text_hin, cl_hin;
 // line_trainer trainer_lw, trainer_dw, trainer_ww;
 // Modified:
 line_trainer trainer_w_en, trainer_w_zh, trainer_c;
-int NETWORK_NUM = 2;
+int NETWORK_NUM = 3;
 
 double func_rand_num()
 {
@@ -63,7 +63,7 @@ void *TrainModelThread(void *id)
 					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random);
 					break;
 				case 2:
-					// trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res);
+					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res);
 					break;
 				default:
 					break;
@@ -85,14 +85,14 @@ void TrainModel() {
 	words.init(words_file, vector_size);
 	en_text_hin.init(en_hin_file, &nodes, &words);
 	zh_text_hin.init(zh_hin_file, &nodes, &words);
-	// cl_hin.init(cl_hin_file, &nodes, &words);
+	cl_hin.init(cl_hin_file, &nodes, &words);
 
 	// trainer_ww.init('w', &text_hin, negative);
 	// trainer_dw.init('d', &text_hin, negative);
 	// trainer_lw.init('l', &text_hin, negative);
 	trainer_w_en.init('w', &en_text_hin, negative);
 	trainer_w_zh.init('w', &zh_text_hin, negative);
-	// trainer_c.init('c', &cl_hin, negative);
+	trainer_c.init('c', &cl_hin, negative);
 
 	clock_t start = clock();
 	printf("Training process:\n");
@@ -143,6 +143,10 @@ int main(int argc, char **argv) {
 		printf("\t\tUse <int> threads (default 1)\n");
 		printf("\t-alpha <float>\n");
 		printf("\t\tSet the starting learning rate; default is 0.025\n");
+		printf("\t-lr <float>\n");
+		printf("\t\tSet the learning rate for transE; default is 0.01\n");
+		printf("\t-lambda <float>\n");
+		printf("\t\tSet the balance factor; default is 1.0\n");
 		printf("\nExamples:\n");
 		printf("./pte -nodes nodes.txt -words words.txt -hin hin.txt -output vec.txt -binary 1 -size 200 -negative 5 -samples 100\n\n");
 		return 0;
@@ -161,6 +165,8 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-negative", argc, argv)) > 0) negative = atoi(argv[i + 1]);
 	if ((i = ArgPos((char *)"-samples", argc, argv)) > 0) samples = atoi(argv[i + 1])*(long long)(1000000);
 	if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lr", argc, argv)) > 0) learning_rate = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lambda", argc, argv)) > 0) lambda = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
 	gsl_rng_env_setup();
