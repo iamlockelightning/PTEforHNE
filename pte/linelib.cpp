@@ -390,7 +390,7 @@ void line_trainer::init(char edge_type, line_hin *p_hin, int negative)
 	}
 }
 
-void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, int id)
+void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, long long id)
 {
 	int target, label, u, v, index, vector_size;
 	real f, g;
@@ -449,7 +449,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 // Added
-void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, int id)
+void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, long long id)
 {
 	int target, label, u, v, index, vector_size;
 	real f, g;

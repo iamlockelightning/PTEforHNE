@@ -57,13 +57,13 @@ void *TrainModelThread(void *id)
 			}
 			switch(i) {
 				case 0:
-					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, next_random);
+					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 1:
-					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, next_random);
+					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 2:
-					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, MARGIN, next_random);
+					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, MARGIN, (long long)id);
 					break;
 				default:
 					break;
