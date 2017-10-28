@@ -8,7 +8,7 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 
-#define LOG_INFO 0 // Added
+#define LOG_INFO 1 // Added
 #define SHOW_FIXED 0 // Added
 
 #define MAX_STRING 100000 //500
@@ -112,5 +112,5 @@ public:
 	void init(char edge_type, line_hin *p_hin, int negative);
 	void train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, long long id);
 	// Added
-	void train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, long long id);
+	void train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, real lambda, long long id);
 };

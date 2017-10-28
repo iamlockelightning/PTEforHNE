@@ -53,7 +53,7 @@ void *TrainModelThread(void *id)
 		// Modified
 		for (int i=0; i!=NETWORK_NUM; i+=1) {
 			if (LOG_INFO) {
-				printf("Edge Sampled from Network[%d]_____\n", i);
+				// printf("Edge Sampled from Network[%d]_____\n", i);
 			}
 			switch(i) {
 				case 0:
@@ -63,7 +63,7 @@ void *TrainModelThread(void *id)
 					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 2:
-					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, MARGIN, (long long)id);
+					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, MARGIN, lambda, (long long)id);
 					break;
 				default:
 					break;
@@ -172,6 +172,10 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-lambda", argc, argv)) > 0) lambda = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
+	printf("__________________\n", );
+	printf("size: %d\nnegative: %d\nsamples: %d\nalpha: %f\nlr: %f\nMARGIN: %f\nlambda: %f\n", vector_size, negative, samples, alpha, learning_rate, MARGIN, lambda);
+	printf("__________________\n", );
+	
 	gsl_rng_env_setup();
 	gsl_T = gsl_rng_rand48;
 	gsl_r = gsl_rng_alloc(gsl_T);
