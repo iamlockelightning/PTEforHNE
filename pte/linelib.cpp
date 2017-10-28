@@ -390,7 +390,7 @@ void line_trainer::init(char edge_type, line_hin *p_hin, int negative)
 	}
 }
 
-void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index)
+void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, int id)
 {
 	int target, label, u, v, index, vector_size;
 	real f, g;
@@ -420,7 +420,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 			label = 0;
 		}
 
-		if (LOG_INFO && d==0) {
+		if (LOG_INFO && d==0 && id == 0) {
 			printf("__ in pte...\n");
 			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
@@ -435,7 +435,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 		node_v->vec.row(target) += g * ((node_u->vec.row(u)));
 	}
 	node_u->vec.row(u) += error_vec;
-	if (LOG_INFO) {
+	if (LOG_INFO && id == 0) {
 			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
@@ -449,8 +449,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 // Added
-int MARGIN = 1;
-void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res)
+void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, int id)
 {
 	int target, label, u, v, index, vector_size;
 	real f, g;
@@ -472,7 +471,7 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 			target = neg_table[(rand_index >> 16) % neg_table_size];
 		} while (target == v);
 
-		if (LOG_INFO) {
+		if (LOG_INFO && id == 0) {
 			printf("__ in transE...\n");
 			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
@@ -494,7 +493,7 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 	    	x = (x.array()<=0.0).select(-1.0, x); // L1
 			node_u->vec.row(u) += alpha * x;
 			node_v->vec.row(target) -= alpha * x;
-			if (LOG_INFO) {
+			if (LOG_INFO && id == 0) {
 				printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);

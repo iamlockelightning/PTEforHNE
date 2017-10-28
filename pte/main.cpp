@@ -12,7 +12,7 @@ char nodes_file[MAX_STRING], words_file[MAX_STRING], en_hin_file[MAX_STRING], ou
 int binary = 0, num_threads = 1, vector_size = 100, negative = 5;
 long long samples = 1, edge_count_actual;
 real alpha = 0.025, starting_alpha;
-real learning_rate = 0.01, lambda = 1.0;
+real learning_rate = 0.01, lambda = 1.0, MARGIN = 1.0;
 // 0.01
 const gsl_rng_type * gsl_T;
 gsl_rng * gsl_r;
@@ -57,13 +57,13 @@ void *TrainModelThread(void *id)
 			}
 			switch(i) {
 				case 0:
-					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random);
+					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, (int)id);
 					break;
 				case 1:
-					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random);
+					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (int)id);
 					break;
 				case 2:
-					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res);
+					trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, MARGIN, (int)id);
 					break;
 				default:
 					break;
@@ -145,6 +145,8 @@ int main(int argc, char **argv) {
 		printf("\t\tSet the starting learning rate; default is 0.025\n");
 		printf("\t-lr <float>\n");
 		printf("\t\tSet the learning rate for transE; default is 0.01\n");
+		printf("\t-MARGIN <float>\n");
+		printf("\t\tSet the MARGIN for transE; default is 0.01\n");
 		printf("\t-lambda <float>\n");
 		printf("\t\tSet the balance factor; default is 1.0\n");
 		printf("\nExamples:\n");
@@ -157,7 +159,7 @@ int main(int argc, char **argv) {
 
 	if ((i = ArgPos((char *)"-enhin", argc, argv)) > 0) strcpy(en_hin_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-zhhin", argc, argv)) > 0) strcpy(zh_hin_file, argv[i + 1]);
-	// if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
+	if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
 
 	if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-binary", argc, argv)) > 0) binary = atoi(argv[i + 1]);
@@ -166,6 +168,7 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-samples", argc, argv)) > 0) samples = atoi(argv[i + 1])*(long long)(1000000);
 	if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-lr", argc, argv)) > 0) learning_rate = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-MARGIN", argc, argv)) > 0) MARGIN = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-lambda", argc, argv)) > 0) lambda = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
