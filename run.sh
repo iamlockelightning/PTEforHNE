@@ -2,6 +2,7 @@
 
 text_file=../WikiExtractor/etc/en_text_all.txt # the text file for training
 infer_file=../WikiExtractor/etc/zh_text_all.txt
+wiki_path=../WikiExtractor/etc/
 output_path=workspace/
 
 window=5 # the window size for the construction of the word-word network
@@ -19,8 +20,9 @@ min_count=0 # discard words that appear less than <min_count>
 
 
 # learn predictive word representations
-./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
-
+# ./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
+cat ${output_path}all.words.node ${output_path}en_title_all.txt ${output_path}en_title_all.txt | sort | uniq > ${output_path}new.all.words.node
+./pte/pte -nodes ${output_path}new.all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -enlinkhin ${output_path}en.linkage.net -zhlinkhin ${output_path}zh.linkage.net -clhin ${output_path}cl.train.40000.net -output ${output_path}textual.linkage.word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
 
 
 # infer the embeddings of the texts provided in the <infer_file>

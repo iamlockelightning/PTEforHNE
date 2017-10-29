@@ -8,7 +8,7 @@
 #include "linelib.h"
 
 char nodes_file[MAX_STRING], words_file[MAX_STRING], en_hin_file[MAX_STRING], output_file[MAX_STRING],
-		zh_hin_file[MAX_STRING], cl_hin_file[MAX_STRING];
+		zh_hin_file[MAX_STRING], en_link_file[MAX_STRING], zh_link_file[MAX_STRING], cl_hin_file[MAX_STRING];
 int binary = 0, num_threads = 1, vector_size = 100, negative = 5;
 long long samples = 1, edge_count_actual;
 real alpha = 0.025, starting_alpha;
@@ -18,11 +18,11 @@ const gsl_rng_type * gsl_T;
 gsl_rng * gsl_r;
 
 line_node nodes, words;
-line_hin en_text_hin, zh_text_hin, cl_hin;
+line_hin en_text_hin, zh_text_hin, en_link_hin, zh_link_hin, cl_hin;
 // line_trainer trainer_lw, trainer_dw, trainer_ww;
 // Modified:
-line_trainer trainer_w_en, trainer_w_zh, trainer_c;
-int NETWORK_NUM = 3;
+line_trainer trainer_w_en, trainer_w_zh, trainer_l_en, trainer_l_zh, trainer_c;
+int NETWORK_NUM = 5;
 
 double func_rand_num()
 {
@@ -85,13 +85,14 @@ void TrainModel() {
 	words.init(words_file, vector_size);
 	en_text_hin.init(en_hin_file, &nodes, &words);
 	zh_text_hin.init(zh_hin_file, &nodes, &words);
+	en_link_hin.init(en_link_file, &nodes, &words);
+	zh_link_hin.init(zh_link_file, &nodes, &words);
 	cl_hin.init(cl_hin_file, &nodes, &words);
 
-	// trainer_ww.init('w', &text_hin, negative);
-	// trainer_dw.init('d', &text_hin, negative);
-	// trainer_lw.init('l', &text_hin, negative);
 	trainer_w_en.init('w', &en_text_hin, negative);
 	trainer_w_zh.init('w', &zh_text_hin, negative);
+	trainer_l_en.init('l', &en_link_hin, negative);
+	trainer_l_zh.init('l', &zh_link_hin, negative);
 	trainer_c.init('c', &cl_hin, negative);
 
 	clock_t start = clock();
@@ -159,6 +160,8 @@ int main(int argc, char **argv) {
 
 	if ((i = ArgPos((char *)"-enhin", argc, argv)) > 0) strcpy(en_hin_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-zhhin", argc, argv)) > 0) strcpy(zh_hin_file, argv[i + 1]);
+	if ((i = ArgPos((char *)"-enlinkhin", argc, argv)) > 0) strcpy(en_link_file, argv[i + 1]);
+	if ((i = ArgPos((char *)"-zhlinkhin", argc, argv)) > 0) strcpy(zh_link_file, argv[i + 1]);
 	if ((i = ArgPos((char *)"-clhin", argc, argv)) > 0) strcpy(cl_hin_file, argv[i + 1]);
 
 	if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);

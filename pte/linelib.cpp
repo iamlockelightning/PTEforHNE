@@ -92,7 +92,7 @@ line_node::line_node() : vec(NULL, 0, 0)
 {
 	node = NULL;
 	node_size = 0;
-	node_max_size = 1000;
+	node_max_size = 100000;
 	vector_size = 0;
 	node_file[0] = 0;
 	node_hash = NULL;
@@ -139,7 +139,7 @@ int line_node::add_node(char *word)
 	node_size++;
 	// Reallocate memory if needed
 	if (node_size + 2 >= node_max_size) {
-		node_max_size += 1000;
+		node_max_size += 100000;
 		node = (struct struct_node *)realloc(node, node_max_size * sizeof(struct struct_node));
 	}
 	hash = get_hash(word);
