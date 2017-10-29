@@ -1,6 +1,7 @@
 #!/bin/sh
 
 text_file=../WikiExtractor/etc/en_text_all.txt # the text file for training
+infer_file=../WikiExtractor/etc/zh_text_all.txt
 output_path=workspace/
 
 window=5 # the window size for the construction of the word-word network
@@ -29,6 +30,7 @@ min_count=0 # discard words that appear less than <min_count>
 
 # ./utils/combine -title ../WikiExtractor/etc/zh_title_40000_all.txt -vector ${output_path}zh.text.emb -output ${output_path}zh.title.text.emb
 # ./combine -title ../WikiExtractor/etc/en_title_40000_all.txt -vector ${output_path}en.text.emb -output ${output_path}en.title.text.emb
+# sed -i '1d' ${output_path}zh.title.text.emb
 # cat ${output_path}en.title.text.emb ${output_path}zh.title.text.emb > ${output_path}all.title.text.emb # modify num
 
 

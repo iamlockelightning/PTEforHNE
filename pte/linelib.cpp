@@ -464,7 +464,7 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 	Eigen::Map<BLPVector> error_vec(_error_vec, vector_size);
 	error_vec.setZero();
 
-	for (int d = 0; d < neg_samples + 1; d++) {
+	for (int d = 0; d < neg_samples; d++) {
 		do {
 			rand_index = rand_index * (unsigned long long)25214903917 + 11;
 			target = neg_table[(rand_index >> 16) % neg_table_size];
@@ -482,7 +482,7 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 		if (LOG_INFO && id == 0) {
 			printf("sum1: %f\tsum2: %f\n", sum1, sum2);
 		}
-	    if (sum1 + MARGIN > sum2) {
+	    // if (sum1 + MARGIN > sum2) {
 	    	res += MARGIN + sum1 - sum2;
 	    	// double x = 2*(entity_vec[e2_a][ii]-entity_vec[e1_a][ii]-relation_vec[rel_a][ii]);
 	    	BLPVector x = 2*(node_u->vec.row(u) - node_v->vec.row(v));
@@ -500,7 +500,7 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 			}
-	    }
+	    // }
 	    if (SHOW_FIXED) {
 			u = v = 0;
 			printf("+++ show FIXED...\n");

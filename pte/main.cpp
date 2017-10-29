@@ -172,9 +172,9 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-lambda", argc, argv)) > 0) lambda = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
-	printf("__________________\n", );
+	printf("__________________\n");
 	printf("size: %d\nnegative: %d\nsamples: %d\nalpha: %f\nlr: %f\nMARGIN: %f\nlambda: %f\n", vector_size, negative, samples, alpha, learning_rate, MARGIN, lambda);
-	printf("__________________\n", );
+	printf("__________________\n");
 	
 	gsl_rng_env_setup();
 	gsl_T = gsl_rng_rand48;
