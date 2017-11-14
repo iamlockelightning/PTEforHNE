@@ -11,16 +11,25 @@ char nodes_file[MAX_STRING], words_file[MAX_STRING], en_hin_file[MAX_STRING], ou
 		zh_hin_file[MAX_STRING], en_link_file[MAX_STRING], zh_link_file[MAX_STRING], cl_hin_file[MAX_STRING];
 int binary = 0, num_threads = 1, vector_size = 100, negative = 5;
 long long samples = 1, edge_count_actual;
+
 real alpha = 0.025, starting_alpha;
-real learning_rate = 0.01, L1 = false, lambda_3 = 1.0, MARGIN = 1.0;
-// 0.01
+
+real learning_rate_1 = 0.01, lambda_1 = 1.0, MARGIN = 1.0;
+real learning_rate_2 = 0.01, lambda_2 = 1.0;
+int L1_flag = 0;
+
+// learning_rate {0.001, 0.01, 0.1}
+// lambda {1, 2.5, 5, 7.5}
+// L1 {1(L1), 0(L2)}
+// vector_size {50, 75, 100, 125}
+
+
+
 const gsl_rng_type * gsl_T;
 gsl_rng * gsl_r;
 
 line_node nodes, words;
 line_hin en_text_hin, zh_text_hin, en_link_hin, zh_link_hin, cl_hin;
-// line_trainer trainer_lw, trainer_dw, trainer_ww;
-// Modified:
 line_trainer trainer_w_en, trainer_w_zh, trainer_l_en, trainer_l_zh, trainer_c;
 int NETWORK_NUM = 5;
 
@@ -52,25 +61,22 @@ void *TrainModelThread(void *id)
 
 		// Modified
 		for (int i=0; i!=NETWORK_NUM; i+=1) {
-			if (LOG_INFO) {
-				// printf("Edge Sampled from Network[%d]_____\n", i);
-			}
 			switch(i) {
 				case 0:
-					// trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 1:
-					// trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 2:
-					// trainer_l_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					trainer_l_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 3:
-					// trainer_l_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					trainer_l_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 4:
-					// trainer_c.train_transE_sample(learning_rate, error_vec, func_rand_num, next_random, res, L1, MARGIN, lambda, (long long)id);
-					trainer_c.train_intersect_sample(res, lambda_3, learning_rate, false, (long long)id);
+					trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, (long long)id);
+					// trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, (long long)id);
 					break;
 				default:
 					break;
@@ -90,16 +96,16 @@ void TrainModel() {
 
 	// nodes.init(nodes_file, vector_size);
 	words.init(words_file, vector_size);
-	// en_text_hin.init(en_hin_file, &nodes, &words);
-	// zh_text_hin.init(zh_hin_file, &nodes, &words);
-	// en_link_hin.init(en_link_file, &nodes, &words);
-	// zh_link_hin.init(zh_link_file, &nodes, &words);
+	en_text_hin.init(en_hin_file, &nodes, &words);
+	zh_text_hin.init(zh_hin_file, &nodes, &words);
+	en_link_hin.init(en_link_file, &nodes, &words);
+	zh_link_hin.init(zh_link_file, &nodes, &words);
 	cl_hin.init(cl_hin_file, &words, &words); // cl_hin.init(cl_hin_file, &nodes, &words);
 
-	// trainer_w_en.init('w', &en_text_hin, negative);
-	// trainer_w_zh.init('w', &zh_text_hin, negative);
-	// trainer_l_en.init('l', &en_link_hin, negative);
-	// trainer_l_zh.init('l', &zh_link_hin, negative);
+	trainer_w_en.init('w', &en_text_hin, negative);
+	trainer_w_zh.init('w', &zh_text_hin, negative);
+	trainer_l_en.init('l', &en_link_hin, negative);
+	trainer_l_zh.init('l', &zh_link_hin, negative);
 	trainer_c.init('c', &cl_hin, negative);
 
 	clock_t start = clock();
@@ -177,13 +183,16 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-negative", argc, argv)) > 0) negative = atoi(argv[i + 1]);
 	if ((i = ArgPos((char *)"-samples", argc, argv)) > 0) samples = atoi(argv[i + 1])*(long long)(1000000);
 	if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
-	if ((i = ArgPos((char *)"-lr", argc, argv)) > 0) learning_rate = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lr_1", argc, argv)) > 0) learning_rate_1 = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lr_2", argc, argv)) > 0) learning_rate_2 = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-MARGIN", argc, argv)) > 0) MARGIN = atof(argv[i + 1]);
-	if ((i = ArgPos((char *)"-lambda_3", argc, argv)) > 0) lambda_3 = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lambda_1", argc, argv)) > 0) lambda_1 = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-lambda_2", argc, argv)) > 0) lambda_2 = atof(argv[i + 1]);
+	if ((i = ArgPos((char *)"-L1_flag", argc, argv)) > 0) L1_flag = atoi(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
 	printf("__________________\n");
-	printf("size: %d\nnegative: %d\nsamples: %d\nalpha: %f\nlr: %f\nMARGIN: %f\nlambda_3: %f\n", vector_size, negative, samples, alpha, learning_rate, MARGIN, lambda_3);
+	printf("size: %d\nnegative: %d\nsamples: %d\nalpha: %f\nlr_1: %f\nMARGIN: %f\nlambda_1: %f\nlr_2: %f\nlambda_2: %f\nL1_flag: %d\n", vector_size, negative, samples, alpha, learning_rate_1, MARGIN, lambda_1, learning_rate_2, lambda_2, L1_flag);
 	printf("__________________\n");
 	
 	gsl_rng_env_setup();

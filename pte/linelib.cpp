@@ -436,9 +436,9 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 
 		if (LOG_INFO && d==0 && id == 0) {
 			printf("__ in pte...\n");
-			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
+			printf("node_u: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+			printf("node_target: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
 
 		f = node_u->vec.row(u) * node_v->vec.row(target).transpose();
@@ -450,98 +450,62 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 	}
 	node_u->vec.row(u) += error_vec;
 	if (LOG_INFO && id == 0) {
-			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
-		}
-	if (SHOW_FIXED) {
-		u = v = 0;
-		printf("+++ show FIXED...\n");
-		printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-		printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-	}
-	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
-}
-// Added
-void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, bool L1, real MARGIN, real lambda, long long id)
-{
-	int target, label, u, v, index, vector_size;
-	real f, g;
-	line_node *node_u = phin->node_u, *node_v = phin->node_v;
-
-	u = smp_u.draw(func_rand_num(), func_rand_num());
-	if (u_nb_cnt[u] == 0) return;
-	index = (int)(smp_u_nb[u].draw(func_rand_num(), func_rand_num()));
-	v = u_nb_id[u][index];
-
-	vector_size = node_u->vector_size;
-	Eigen::Map<BLPVector> error_vec(_error_vec, vector_size);
-	error_vec.setZero();
-
-	for (int d = 0; d < neg_samples; d++) {
-		do {
-			rand_index = rand_index * (unsigned long long)25214903917 + 11;
-			target = neg_table[(rand_index >> 16) % neg_table_size];
-		} while (target == v);
-
-		if (LOG_INFO && d == 0 && id == 0) {
-			printf("__ in transE...\n");
-			printf("node_u->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
-		}
-		real sum1 = 0, sum2 = 0;
-		if (L1) { // L1norm
-			sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).cwiseAbs().sum();
-			sum2 = (node_u->vec.row(u) - node_v->vec.row(target)).cwiseAbs().sum();
-		} else { // L2norm
-			sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).norm();
-			sum2 = (node_u->vec.row(u) - node_v->vec.row(target)).norm();
-		}
-		if (LOG_INFO && id == 0) {
-			printf("sum1: %f\tsum2: %f\n", sum1, sum2);
-		}
-	    if (sum1 + MARGIN > sum2) {
-	    	res += MARGIN + sum1 - sum2;
-	    	BLPVector x = 2.0*(node_u->vec.row(u) - node_v->vec.row(v));
-	    	if (L1) {
-		    	x = (x.array()>0.0).select(1.0, x);
-		    	x = (x.array()<=0.0).select(-1.0, x);
-		    }
-			node_u->vec.row(u) += -1.0 * alpha * x;
-			node_v->vec.row(v) -= -1.0 * alpha * x;
-
-			x = 2.0*(node_u->vec.row(u) - node_v->vec.row(target));
-			if (L1) {
-				x = (x.array()>0.0).select(1.0, x);
-		    	x = (x.array()<=0.0).select(-1.0, x);
-		    }
-			node_u->vec.row(u) += alpha * x;
-			node_v->vec.row(target) -= alpha * x;
-
-			if (LOG_INFO && d == 0 && id == 0) {
-				printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
-			}
-	    }
-	    if (SHOW_FIXED) {
-			u = v = 0;
-			printf("+++ show FIXED...\n");
-			printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
-			printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
-		}
+		printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+		printf("node_v: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		printf("node_target: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 	}
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 
-void line_trainer::train_intersect_sample(real &res, real lambda, real learning_rate, bool L1, long long id) {
+void line_trainer::train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, long long id) {
 	line_node *node_u = phin->node_u, *node_v = phin->node_v;
 	res = 0;
 	random_shuffle(phin->hin_id_pair.begin(), phin->hin_id_pair.end());
 	for (int x = 0; x < phin->hin_id_pair.size(); x += 1) {
 		int u = phin->hin_id_pair[x].first;
 		int v = phin->hin_id_pair[x].second;
+
+		if (LOG_INFO && x == 0 && id == 0) {
+			printf("__ in transE...\n");
+			printf("node_u: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		}
+
+		// sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).cwiseAbs().sum();
+		// sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).norm();
+		BLPVector diff = 2.0*(node_u->vec.row(u) - node_v->vec.row(v));
+		if (L1) {
+			diff = (diff.array()>0.0).select(1.0, diff);
+			diff = (diff.array()<=0.0).select(-1.0, diff);
+		}
+		node_u->vec.row(u) += -1.0 * learning_rate * diff * lambda;
+		node_v->vec.row(v) -= -1.0 * learning_rate * diff * lambda;
+
+		node_u->vec.row(u) /= node_u->vec.row(u).norm();
+		node_v->vec.row(v) /= node_v->vec.row(v).norm();
+		
+		res += (node_u->vec.row(u) - node_v->vec.row(v)).norm();
+
+		if (LOG_INFO && x == 0 && id == 0) {
+			printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		}
+	}
+}
+
+void line_trainer::train_intersect_sample(real &res, real lambda, real learning_rate, int L1, long long id) {
+	line_node *node_u = phin->node_u, *node_v = phin->node_v;
+	res = 0;
+	random_shuffle(phin->hin_id_pair.begin(), phin->hin_id_pair.end());
+	for (int x = 0; x < phin->hin_id_pair.size(); x += 1) {
+		int u = phin->hin_id_pair[x].first;
+		int v = phin->hin_id_pair[x].second;
+
+		if (LOG_INFO && x == 0 && id == 0) {
+			printf("__ in intersect...\n");
+			printf("node_u: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v: %d before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		}
 
 		BLPVector f_res = node_u->vec.row(u) * transfer - node_v->vec.row(v);
 		BLPVector d_v_e1 = 2.0 * f_res * transfer;
@@ -555,6 +519,11 @@ void line_trainer::train_intersect_sample(real &res, real lambda, real learning_
 		node_u->vec.row(u) /= node_u->vec.row(u).norm();
 		node_v->vec.row(v) /= node_v->vec.row(v).norm();
 
-        res += (node_u->vec.row(u) * transfer - node_v->vec.row(v)).norm();
+		res += (node_u->vec.row(u) * transfer - node_v->vec.row(v)).norm();
+
+		if (LOG_INFO && x == 0 && id == 0) {
+			printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
+			printf("node_v %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
+		}
 	}
 }
