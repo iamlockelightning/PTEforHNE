@@ -21,8 +21,8 @@ min_count=0 # discard words that appear less than <min_count>
 
 # learn predictive word representations
 # ./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
-cat ${output_path}all.words.node ${output_path}en_title_all.txt ${output_path}en_title_all.txt | sort | uniq > ${output_path}new.all.words.node
-./pte/pte -nodes ${output_path}new.all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -enlinkhin ${output_path}en.linkage.net -zhlinkhin ${output_path}zh.linkage.net -clhin ${output_path}cl.train.40000.net -output ${output_path}textual.linkage.word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
+# cat ${output_path}all.words.node ${wiki_path}en_title_all.txt ${wiki_path}en_title_all.txt | sort | uniq > ${output_path}new.all.words.node
+./pte/pte -nodes ${output_path}new.all.words.node -words ${output_path}new.all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -enlinkhin ${output_path}en.linkage.net -zhlinkhin ${output_path}zh.linkage.net -clhin ${output_path}cl.train.40000.net -output ${output_path}align.word.emb -binary 0 -size 3 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 1
 
 
 # infer the embeddings of the texts provided in the <infer_file>
@@ -30,8 +30,8 @@ cat ${output_path}all.words.node ${output_path}en_title_all.txt ${output_path}en
 
 
 
-# ./utils/combine -title ../WikiExtractor/etc/zh_title_40000_all.txt -vector ${output_path}zh.text.emb -output ${output_path}zh.title.text.emb
-# ./combine -title ../WikiExtractor/etc/en_title_40000_all.txt -vector ${output_path}en.text.emb -output ${output_path}en.title.text.emb
+# ./utils/combine -title ${wiki_path}zh_title_all.txt -vector ${output_path}zh.text.emb -output ${output_path}zh.title.text.emb
+# ./utils/combine -title ${wiki_path}en_title_all.txt -vector ${output_path}en.text.emb -output ${output_path}en.title.text.emb
 # sed -i '1d' ${output_path}zh.title.text.emb
 # cat ${output_path}en.title.text.emb ${output_path}zh.title.text.emb > ${output_path}all.title.text.emb # modify num
 

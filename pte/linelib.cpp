@@ -252,6 +252,7 @@ void line_hin::init(char *file_name, line_node *p_u, line_node *p_v)
 			curnb.eg_wei = w;
 			hin[u].push_back(curnb);
 			hin_size++;
+			hin_id_pair.push_back(std::make_pair(u, v)); // Added 1114
 		}
 	}
 	fclose(fi);
@@ -260,7 +261,7 @@ void line_hin::init(char *file_name, line_node *p_u, line_node *p_v)
 	printf("Edge size: %lld\n", hin_size);
 }
 
-line_trainer::line_trainer()
+line_trainer::line_trainer() : transfer(NULL, 0, 0)
 {
 	edge_tp = 0;
 	phin = NULL;
@@ -274,6 +275,7 @@ line_trainer::line_trainer()
 	expTable = NULL;
 	neg_samples = 0;
 	neg_table = NULL;
+	_transfer = NULL;
 }
 
 line_trainer::~line_trainer()
@@ -293,6 +295,8 @@ line_trainer::~line_trainer()
 	}
 	neg_samples = 0;
 	if (neg_table != NULL) { free(neg_table); neg_table = NULL; }
+	if (_transfer != NULL) { free(_transfer); _transfer = NULL; }
+	new (&transfer) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 
 void line_trainer::init(char edge_type, line_hin *p_hin, int negative)
@@ -307,6 +311,16 @@ void line_trainer::init(char edge_type, line_hin *p_hin, int negative)
 		exit(1);
 	}
 
+	if (edge_tp == 'c') {
+		_transfer = (real *)malloc(node_u->vector_size*node_u->vector_size * sizeof(real));
+		srand((unsigned)time(0));
+		for (int i = 0; i < node_u->vector_size*node_u->vector_size; i += 1) _transfer[i] = rand();
+		new (&transfer) Eigen::Map<BLPMatrix>(_transfer, node_u->vector_size, node_v->vector_size);
+		Eigen::JacobiSVD<BLPMatrix> svd(transfer, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		transfer = svd.matrixU();
+	}
+
+	
 	// compute the degree of vertices
 	u_nb_cnt = (int *)calloc(node_u->node_size, sizeof(int));
 	u_wei = (double *)calloc(node_u->node_size, sizeof(double));
@@ -449,7 +463,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 // Added
-void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, real lambda, long long id)
+void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, bool L1, real MARGIN, real lambda, long long id)
 {
 	int target, label, u, v, index, vector_size;
 	real f, g;
@@ -476,31 +490,41 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 			printf("node_v->vec.row(%d) before updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 		}
-		real sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).cwiseAbs().sum(); // L1norm
-		// (node_u->vec.row(u) - node_v->vec.row(target)).norm() // L2norm
-		real sum2 = (node_u->vec.row(u) - node_v->vec.row(target)).cwiseAbs().sum();
+		real sum1 = 0, sum2 = 0;
+		if (L1) { // L1norm
+			sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).cwiseAbs().sum();
+			sum2 = (node_u->vec.row(u) - node_v->vec.row(target)).cwiseAbs().sum();
+		} else { // L2norm
+			sum1 = (node_u->vec.row(u) - node_v->vec.row(v)).norm();
+			sum2 = (node_u->vec.row(u) - node_v->vec.row(target)).norm();
+		}
 		if (LOG_INFO && id == 0) {
 			printf("sum1: %f\tsum2: %f\n", sum1, sum2);
 		}
-	    // if (sum1 + MARGIN > sum2) {
+	    if (sum1 + MARGIN > sum2) {
 	    	res += MARGIN + sum1 - sum2;
-	    	// double x = 2*(entity_vec[e2_a][ii]-entity_vec[e1_a][ii]-relation_vec[rel_a][ii]);
-	    	BLPVector x = 2*(node_u->vec.row(u) - node_v->vec.row(v));
-	    	x = (x.array()>0.0).select(1.0, x); // L1
-	    	x = (x.array()<=0.0).select(-1.0, x); // L1
+	    	BLPVector x = 2.0*(node_u->vec.row(u) - node_v->vec.row(v));
+	    	if (L1) {
+		    	x = (x.array()>0.0).select(1.0, x);
+		    	x = (x.array()<=0.0).select(-1.0, x);
+		    }
 			node_u->vec.row(u) += -1.0 * alpha * x;
 			node_v->vec.row(v) -= -1.0 * alpha * x;
-			x = 2*(node_u->vec.row(u) - node_v->vec.row(target));
-			x = (x.array()>0.0).select(1.0, x); // L1
-	    	x = (x.array()<=0.0).select(-1.0, x); // L1
+
+			x = 2.0*(node_u->vec.row(u) - node_v->vec.row(target));
+			if (L1) {
+				x = (x.array()>0.0).select(1.0, x);
+		    	x = (x.array()<=0.0).select(-1.0, x);
+		    }
 			node_u->vec.row(u) += alpha * x;
 			node_v->vec.row(target) -= alpha * x;
+
 			if (LOG_INFO && d == 0 && id == 0) {
 				printf("node_u->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 				printf("node_v->vec.row(%d) after updated: [%lf, %lf, %lf, %lf, %lf].\n", target, node_v->vec.row(target)[0], node_v->vec.row(target)[1], node_v->vec.row(target)[2], node_v->vec.row(target)[3], node_v->vec.row(target)[4]);
 			}
-	    // }
+	    }
 	    if (SHOW_FIXED) {
 			u = v = 0;
 			printf("+++ show FIXED...\n");
@@ -509,4 +533,28 @@ void line_trainer::train_transE_sample(real alpha, real *_error_vec, double(*fun
 		}
 	}
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
+}
+
+void line_trainer::train_intersect_sample(real &res, real lambda, real learning_rate, bool L1, long long id) {
+	line_node *node_u = phin->node_u, *node_v = phin->node_v;
+	res = 0;
+	random_shuffle(phin->hin_id_pair.begin(), phin->hin_id_pair.end());
+	for (int x = 0; x < phin->hin_id_pair.size(); x += 1) {
+		int u = phin->hin_id_pair[x].first;
+		int v = phin->hin_id_pair[x].second;
+
+		BLPVector f_res = node_u->vec.row(u) * transfer - node_v->vec.row(v);
+		BLPVector d_v_e1 = 2.0 * f_res * transfer;
+		BLPVector d_v_e2 = -2.0 * f_res;
+		BLPMatrix d_tr = 2.0 * node_u->vec.row(u).transpose() * f_res;
+		
+		node_u->vec.row(u) -= d_v_e1 * learning_rate * lambda;
+		node_v->vec.row(v) -= d_v_e2 * learning_rate * lambda;
+		transfer -= d_tr * learning_rate * lambda;
+
+		node_u->vec.row(u) /= node_u->vec.row(u).norm();
+		node_v->vec.row(v) /= node_v->vec.row(v).norm();
+
+        res += (node_u->vec.row(u) * transfer - node_v->vec.row(v)).norm();
+	}
 }

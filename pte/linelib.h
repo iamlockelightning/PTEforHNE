@@ -84,6 +84,7 @@ protected:
 	std::vector<hin_nb> *hin;
 	long long hin_size;
 
+	std::vector<std::pair<int, int> > hin_id_pair;	// Added 1114
 public:
 	line_hin();
 	~line_hin();
@@ -105,6 +106,8 @@ protected:
 	int neg_samples, *neg_table;
 
 	char edge_tp;
+	real *_transfer;	// Added 1114
+	Eigen::Map<BLPMatrix> transfer;
 public:
 	line_trainer();
 	~line_trainer();
@@ -112,5 +115,6 @@ public:
 	void init(char edge_type, line_hin *p_hin, int negative);
 	void train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, long long id);
 	// Added
-	void train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, real MARGIN, real lambda, long long id);
+	void train_transE_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, real &res, bool L1, real MARGIN, real lambda, long long id);
+	void train_intersect_sample(real &res, real lambda, real learning_rate, bool L1, long long id);
 };
