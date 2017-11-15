@@ -114,6 +114,6 @@ public:
 	void init(char edge_type, line_hin *p_hin, int negative);
 	void train_sample(real alpha, real *_error_vec, double(*func_rand_num)(), unsigned long long &rand_index, long long id);
 	// Added
-	void train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, long long id);
-	void train_intersect_sample(real &res, real lambda, real learning_rate, int L1, long long id);
+	void train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, unsigned long long &rand_index, long long id);
+	void train_intersect_sample(real &res, real lambda, real learning_rate, int L1, unsigned long long &rand_index, long long id);
 };

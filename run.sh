@@ -22,7 +22,7 @@ min_count=0 # discard words that appear less than <min_count>
 # learn predictive word representations
 # ./pte/pte -nodes ${output_path}all.words.node -words ${output_path}all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -clhin ${output_path}cl.train.40000.net -output ${output_path}word.emb -binary 0 -size 30 -negative 5 -samples 10000 -alpha 0.025 -lr 0.01 -MARGIN 1.0 -lambda 0.01 -threads 30
 # cat ${output_path}all.words.node ${wiki_path}en_title_all.txt ${wiki_path}en_title_all.txt | sort | uniq > ${output_path}new.all.words.node
-./pte/pte -nodes ${output_path}new.all.words.node -words ${output_path}new.all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -enlinkhin ${output_path}en.linkage.net -zhlinkhin ${output_path}zh.linkage.net -clhin ${output_path}cl.train.40000.net -output ${output_path}1115.TL.transE.word.emb -binary 0 -size 30 -negative 5 -samples 1000 -alpha 0.025 -lr_1 0.001 -MARGIN 1.0 -lambda_1 0.1 -lr_2 0.001 -lambda_2 1.0 -threads 26
+./pte/pte -nodes ${output_path}new.all.words.node -words ${output_path}new.all.words.node -enhin ${output_path}en.ww.net -zhhin ${output_path}zh.ww.net -enlinkhin ${output_path}en.linkage.net -zhlinkhin ${output_path}zh.linkage.net -clhin ${output_path}cl.train.40000.net -output ${output_path}1116.TL.transE.word.emb -binary 0 -size 30 -negative 5 -samples 1000 -alpha 0.025 -lr_1 0.001 -MARGIN 1.0 -lambda_1 0.1 -lr_2 0.001 -lambda_2 1.0 -threads 26
 
 
 # infer the embeddings of the texts provided in the <infer_file>

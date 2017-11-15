@@ -75,8 +75,8 @@ void *TrainModelThread(void *id)
 					trainer_l_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 4:
-					trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, (long long)id);
-					// trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, (long long)id);
+					trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, next_random, (long long)id);
+					// trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, next_random, (long long)id);
 					break;
 				default:
 					break;
