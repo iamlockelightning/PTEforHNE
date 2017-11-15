@@ -8,7 +8,7 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 
-#define LOG_INFO 1 // Added
+#define LOG_INFO 0 // Added
 
 #define MAX_STRING 100000 //500
 #define EXP_TABLE_SIZE 1000

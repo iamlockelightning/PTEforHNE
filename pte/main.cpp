@@ -82,7 +82,7 @@ void *TrainModelThread(void *id)
 					break;
 			}
 		}
-		break;
+		// break;
 		edge_count += NETWORK_NUM;
 	}
 	free(error_vec);
@@ -96,10 +96,10 @@ void TrainModel() {
 
 	// nodes.init(nodes_file, vector_size);
 	words.init(words_file, vector_size);
-	en_text_hin.init(en_hin_file, &nodes, &words);
-	zh_text_hin.init(zh_hin_file, &nodes, &words);
-	en_link_hin.init(en_link_file, &nodes, &words);
-	zh_link_hin.init(zh_link_file, &nodes, &words);
+	en_text_hin.init(en_hin_file, &words, &words);
+	zh_text_hin.init(zh_hin_file, &words, &words);
+	en_link_hin.init(en_link_file, &words, &words);
+	zh_link_hin.init(zh_link_file, &words, &words);
 	cl_hin.init(cl_hin_file, &words, &words); // cl_hin.init(cl_hin_file, &nodes, &words);
 
 	trainer_w_en.init('w', &en_text_hin, negative);

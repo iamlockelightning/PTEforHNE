@@ -457,11 +457,14 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 	new (&error_vec) Eigen::Map<BLPMatrix>(NULL, 0, 0);
 }
 
-void line_trainer::train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, long long id) {
+void line_trainer::train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, unsigned long long &rand_index, long long id) {
 	line_node *node_u = phin->node_u, *node_v = phin->node_v;
 	res = 0;
-	random_shuffle(phin->hin_id_pair.begin(), phin->hin_id_pair.end());
-	for (int x = 0; x < phin->hin_id_pair.size(); x += 1) {
+	// random_shuffle(phin->hin_id_pair.begin(), phin->hin_id_pair.end());
+
+	for (int i = 0; i < 5; i += 1) {
+		rand_index = rand_index * (unsigned long long)25214903917 + 11;
+		int x = rand_index % phin->hin_id_pair.size();
 		int u = phin->hin_id_pair[x].first;
 		int v = phin->hin_id_pair[x].second;
 
