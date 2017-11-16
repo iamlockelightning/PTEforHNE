@@ -447,8 +447,10 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 		else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
 		error_vec += g * ((node_v->vec.row(target)));
 		node_v->vec.row(target) += g * ((node_u->vec.row(u)));
+		// node_v->vec.row(target) /= node_v->vec.row(target).norm();
 	}
 	node_u->vec.row(u) += error_vec;
+	// node_u->vec.row(u) /= node_u->vec.row(u).norm();
 	if (LOG_INFO && id == 0) {
 		printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 		printf("node_v: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
@@ -528,5 +530,20 @@ void line_trainer::train_intersect_sample(real &res, real lambda, real learning_
 			printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
 			printf("node_v %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", v, node_v->vec.row(v)[0], node_v->vec.row(v)[1], node_v->vec.row(v)[2], node_v->vec.row(v)[3], node_v->vec.row(v)[4]);
 		}
+	}
+}
+
+void line_trainer::save_transfer(char *file_name) {
+	if (_transfer!=NULL) {
+		FILE *fo = fopen(file_name, "wb");
+		line_node *node_u = phin->node_u;
+		int num = phin->node_u->vector_size * phin->node_u->vector_size;
+		for (int i = 0; i < num; i++) {
+			fprintf(fo, "%lf ", _transfer[i]);
+		}
+		fprintf(fo, "\n");
+		fclose(fo);
+	} else {
+		printf("save_transfer() failed, _transfer == NULL\n");
 	}
 }

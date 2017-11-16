@@ -116,4 +116,5 @@ public:
 	// Added
 	void train_transE_sample(real &res, real lambda, real learning_rate, real margin, int L1, unsigned long long &rand_index, long long id);
 	void train_intersect_sample(real &res, real lambda, real learning_rate, int L1, unsigned long long &rand_index, long long id);
+	void save_transfer(char *file_name);
 };

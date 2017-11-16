@@ -16,7 +16,7 @@ real alpha = 0.025, starting_alpha;
 
 real learning_rate_1 = 0.01, lambda_1 = 1.0, MARGIN = 1.0;
 real learning_rate_2 = 0.01, lambda_2 = 1.0;
-int L1_flag = 0;
+int L1_flag = 0, transfer_flag = 0;
 
 // learning_rate {0.001, 0.01, 0.1}
 // lambda {1, 2.5, 5, 7.5}
@@ -75,8 +75,8 @@ void *TrainModelThread(void *id)
 					trainer_l_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
 					break;
 				case 4:
-					trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, next_random, (long long)id);
-					// trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, next_random, (long long)id);
+					// trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, next_random, (long long)id);
+					trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, next_random, (long long)id);
 					break;
 				default:
 					break;
@@ -117,6 +117,10 @@ void TrainModel() {
 	printf("Total time: %lf\n", (double)(finish - start) / CLOCKS_PER_SEC);
 
 	words.output(output_file, binary);
+	if (transfer_flag) {
+		strcat(output_file, (char*)".transferM.txt");
+		trainer_c.save_transfer(output_file);
+	}
 }
 
 int ArgPos(char *str, int argc, char **argv) {
@@ -189,6 +193,7 @@ int main(int argc, char **argv) {
 	if ((i = ArgPos((char *)"-lambda_1", argc, argv)) > 0) lambda_1 = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-lambda_2", argc, argv)) > 0) lambda_2 = atof(argv[i + 1]);
 	if ((i = ArgPos((char *)"-L1_flag", argc, argv)) > 0) L1_flag = atoi(argv[i + 1]);
+	if ((i = ArgPos((char *)"-transfer_flag", argc, argv)) > 0) transfer_flag = atoi(argv[i + 1]);
 	if ((i = ArgPos((char *)"-threads", argc, argv)) > 0) num_threads = atoi(argv[i + 1]);
 
 	printf("__________________\n");
