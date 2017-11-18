@@ -450,6 +450,7 @@ void line_trainer::train_sample(real alpha, real *_error_vec, double(*func_rand_
 		// node_v->vec.row(target) /= node_v->vec.row(target).norm();
 	}
 	node_u->vec.row(u) += error_vec;
+	_error_vec[0] = error_vec.sum();
 	// node_u->vec.row(u) /= node_u->vec.row(u).norm();
 	if (LOG_INFO && id == 0) {
 		printf("node_u: %d after updated: [%lf, %lf, %lf, %lf, %lf].\n", u, node_u->vec.row(u)[0], node_u->vec.row(u)[1], node_u->vec.row(u)[2], node_u->vec.row(u)[3], node_u->vec.row(u)[4]);
@@ -513,7 +514,7 @@ void line_trainer::train_intersect_sample(real &res, real lambda, real learning_
 		}
 
 		BLPVector f_res = node_u->vec.row(u) * transfer - node_v->vec.row(v);
-		BLPVector d_v_e1 = 2.0 * f_res * transfer;
+		BLPVector d_v_e1 = 2.0 * transfer * f_res.transpose();
 		BLPVector d_v_e2 = -2.0 * f_res;
 		BLPMatrix d_tr = 2.0 * node_u->vec.row(u).transpose() * f_res;
 		

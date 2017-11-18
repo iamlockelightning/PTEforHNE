@@ -44,7 +44,7 @@ void *TrainModelThread(void *id)
 	unsigned long long next_random = (long long)id;
 	real *error_vec = (real *)calloc(vector_size, sizeof(real));
 	real res = 0;
-
+	int epo = 0;
 	while (1)
 	{
 		if (edge_count > samples / num_threads + 2) break;
@@ -58,25 +58,33 @@ void *TrainModelThread(void *id)
 			alpha = starting_alpha * (1 - edge_count_actual / (real)(samples + 1));
 			if (alpha < starting_alpha * 0.0001) alpha = starting_alpha * 0.0001;
 		}
-
+		if (id == 0) {
+			printf("Epoch %i in thread #%lld:\nLoss: ", ++epo, (long long)id);
+		}
+		real total_loss = 0.0;
 		// Modified
 		for (int i=0; i!=NETWORK_NUM; i+=1) {
 			switch(i) {
 				case 0:
 					trainer_w_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					if (id == 0) {printf("w_en: %lf +", error_vec[0]); total_loss+=error_vec[0];}
 					break;
 				case 1:
 					trainer_w_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					if (id == 0) {printf("w_zh: %lf +", error_vec[0]); total_loss+=error_vec[0];}
 					break;
 				case 2:
 					trainer_l_en.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					if (id == 0) {printf("l_en: %lf +", error_vec[0]); total_loss+=error_vec[0];}
 					break;
 				case 3:
 					trainer_l_zh.train_sample(alpha, error_vec, func_rand_num, next_random, (long long)id);
+					if (id == 0) {printf("l_zh: %lf +", error_vec[0]); total_loss+=error_vec[0];}
 					break;
 				case 4:
 					// trainer_c.train_transE_sample(res, lambda_1, learning_rate_1, L1_flag, MARGIN, next_random, (long long)id);
 					trainer_c.train_intersect_sample(res, lambda_2, learning_rate_2, L1_flag, next_random, (long long)id);
+					if (id == 0) {total_loss+=res; printf("transM: %lf = %lf", res, total_loss);}
 					break;
 				default:
 					break;
